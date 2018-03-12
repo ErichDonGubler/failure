@@ -6,11 +6,7 @@ without_std! {
     /// An error with context around it.
     ///
     /// The context is intended to be a human-readable, user-facing explanation for the
-    /// error that has occurred. The underlying error is not assumed to be end-user-relevant
-    /// information.
-    ///
-    /// The `Display` impl for `Context` only prints the human-readable context, while the
-    /// `Debug` impl also prints the underlying error.
+    /// error that has occurred.
     pub struct Context<D: Display + Send + Sync + 'static> {
         context: D,
     }
@@ -35,7 +31,7 @@ without_std! {
 
     impl<D: Display + Send + Sync + 'static> Debug for Context<D> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{}", self.context)
+            write!(f, "{:?}", self.context)
         }
     }
 
@@ -52,11 +48,7 @@ with_std! {
     /// An error with context around it.
     ///
     /// The context is intended to be a human-readable, user-facing explanation for the
-    /// error that has occurred. The underlying error is not assumed to be end-user-relevant
-    /// information.
-    ///
-    /// The `Display` impl for `Context` only prints the human-readable context, while the
-    /// `Debug` impl also prints the underlying error.
+    /// error that has occurred.
     pub struct Context<D: Display + Send + Sync + 'static> {
         context: D,
         failure: Either<Backtrace, Error>,
@@ -92,13 +84,13 @@ with_std! {
 
     impl<D: Display + Send + Sync + 'static> Debug for Context<D> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{:?}\n\n{}", self.failure, self.context)
+            write!(f, "{}:\n{:?}", self.context, self.failure)
         }
     }
 
     impl<D: Display + Send + Sync + 'static> Display for Context<D> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{}", self.context)
+            write!(f, "{}:\n{}", self.context, self.failure)
         }
     }
 
@@ -128,6 +120,15 @@ with_std! {
             match *self {
                 Either::This(ref backtrace) => write!(f, "{:?}", backtrace),
                 Either::That(ref error)     => write!(f, "{:?}", error),
+            }
+        }
+    }
+
+    impl Display for Either<Backtrace, Error> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match *self {
+                Either::This(ref backtrace) => write!(f, "{}", backtrace),
+                Either::That(ref error)     => write!(f, "{}", error),
             }
         }
     }
